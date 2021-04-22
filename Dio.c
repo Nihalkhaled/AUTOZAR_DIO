@@ -31,6 +31,43 @@
 
 
 
+Dio_LevelType Dio_ReadChannel(Dio_ChannelType ChannelId){
+
+	uint8 PortId,PinId,loc_levelType;
+	volatile uint8 * DDRx;
+	volatile uint8 * Portx;
+	PortId = ChannelId  /8 ;
+	PinId  = ChannelId  %8 ;
+
+	switch(PortId){
+	/*in case of PORT A*/
+	case DIO_PORT_A:
+		Portx = PORTA;
+		DDRx  = DDRA;
+		break;
+
+	case DIO_PORT_B:
+		Portx = PORTB;
+		DDRx = DDRB;
+		break;
+
+	case DIO_PORT_C:
+		Portx = PORTC;
+		DDRx  = DDRC;
+		break;
+
+	case DIO_PORT_D:
+		Portx = PORTD;
+		DDRx  = DDRD;
+		break;
+	}
+	asm("cli");	/*Disable global interrupt*/
+	loc_levelType= GET_BIT(*Portx,PinId);
+	asm("sei");	/*Enable global interrupt*/
+
+	return loc_levelType;
+}
+
 
 void Dio_WriteChannel(Dio_ChannelType ChannelId, Dio_LevelType Level)
 {
@@ -67,7 +104,7 @@ void Dio_WriteChannel(Dio_ChannelType ChannelId, Dio_LevelType Level)
 
 	if( GET_BIT(*DDRx, PinId) == OUTPUT )
 	{
-		/* [SWS_Dio_00005] The Dio moduleâ€™s read and write services shall ensure for all services,
+		/* [SWS_Dio_00005] The Dio module’s read and write services shall ensure for all services,
 				that the data is consistent (Interruptible read-modify-write sequences are not allowed) */
 
 		asm("cli");	/*Disable global interrupt*/
@@ -94,3 +131,4 @@ void Dio_WriteChannel(Dio_ChannelType ChannelId, Dio_LevelType Level)
 		 * Dio_WriteChannel function shall have no influence on the result of the next Read-Service */
 	}
 }
+

@@ -29,6 +29,7 @@ typedef struct
 
 } Dio_ChannelGroupType;
 
+
 /*                DIO_CHANNEL_IDs           */
 
 #define DIO_CHANNEL_0	            ((uint8)0)
