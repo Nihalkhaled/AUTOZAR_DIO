@@ -6,42 +6,43 @@
  * Author      	: 	Nihal - Habiba - Nour
  ********************************************************************************************/
 
+
 #ifndef DIO_H_
 #define DIO_H_
 
+/* include Std_Types.h header file*/
 #include "Std_Types.h"
 
-/* Dio Types */
 
+/* Dio Types */
 typedef uint8 Dio_ChannelType;
 typedef uint8 Dio_PortType;
 typedef uint8 Dio_LevelType;
 typedef uint8 Dio_PortLevelType;
 
-
-/*  Dio_ChannelGroupConfiguration types */
+/*  Dio_ChannelGroupConfiguration types  */
 typedef struct
 {
-  uint8 mask;
-  uint8 offset;
-  Dio_PortType PortIndex;
+	uint8 mask;
+	uint8 offset;
+	Dio_PortType PortIndex;
 
 } Dio_ChannelGroupType;
 
+/* include Dio_Cfg.h header file*/
 #include "Dio_Cfg.h"
 
 /* A macro used to validate channel group id */
-#define DIO_IS_CHANNEL_GROUPMSK_VALID(group)(                  \
-		                                    (group == 0x01) || \
-		                                    (group == 0x03) || \
-		                                    (group == 0x07) || \
-		                                    (group == 0x0F) || \
-		                                    (group == 0x1F) || \
-		                                    (group == 0x3F) || \
-		                                    (group == 0x7F) || \
-		                                    (group == 0xFF)    \
+#define DIO_IS_CHANNEL_GROUPMSK_VALID(Group_Msk )(                  \
+		                                    (Group_Msk  == 0x01) || \
+		                                    (Group_Msk  == 0x03) || \
+		                                    (Group_Msk  == 0x07) || \
+		                                    (Group_Msk  == 0x0F) || \
+		                                    (Group_Msk  == 0x1F) || \
+		                                    (Group_Msk  == 0x3F) || \
+		                                    (Group_Msk  == 0x7F) || \
+		                                    (Group_Msk  == 0xFF)    \
 )
-
 
 
 /*                DIO_CHANNEL_IDs           */
@@ -80,30 +81,58 @@ typedef struct
 #define DIO_CHANNEL_31              ((uint8)31)
 
 
-#define DIO_PORT_A			        ((uint8)0)
-#define DIO_PORT_B			        ((uint8)1)
-#define DIO_PORT_C			        ((uint8)2)
-#define DIO_PORT_D			        ((uint8)3)
-
+#define DIO_PORT_A			        ((uint8) 0)
+#define DIO_PORT_B			        ((uint8) 1)
+#define DIO_PORT_C			        ((uint8) 2)
+#define DIO_PORT_D			        ((uint8) 3)
 
 
 
 Dio_LevelType Dio_ReadChannel(Dio_ChannelType ChannelId);//habiba
 
-void Dio_WriteChannel(Dio_ChannelType ChannelId, Dio_LevelType Level);//nihal
+/******************************************************************************
+* Service name: Dio_WriteChannel
+* Service ID[hex]: 0x01
+* Sync/Async: Synchronous
+* Reentrancy: Reentrant
+* Parameters (in): ChannelId ID of DIO channel -   Range(DIO_CHANNEL_0 -> DIO_CHANNEL_31)
+*                : Level Value to be written -     Range (STD_LOW -> STD_HIGH)
+* Parameters(inout):None
+* Parameters (out): None
+* Return value: None
+* Description: Service to set a level of a channel
+*****************************************************************************/
+void Dio_WriteChannel(Dio_ChannelType ChannelId, Dio_LevelType Level);
 
-Dio_PortLevelType Dio_ReadPort(Dio_PortType PortId);//nour
 
-void Dio_WritePort(Dio_PortType PortId, Dio_PortLevelType Level);//habiba
+Dio_PortLevelType Dio_ReadPort(Dio_PortType PortId);
 
-Dio_PortLevelType Dio_ReadChannelGroup(const Dio_ChannelGroupType* ChannelGroupIdPtr );//nihal
+void Dio_WritePort(Dio_PortType PortId, Dio_PortLevelType Level);
 
-void Dio_WriteChannelGroup(const Dio_ChannelGroupType* ChannelGroupIdPtr,Dio_PortLevelType Level );//nour
+/***************************************************************************
+* Service name: Dio_ReadChannelGroup
+* Service ID[hex]: 0x04
+* Sync/Async: Synchronous
+* Reentrancy: Reentrant
+* Parameters (in): ChannelGroupIdPtr Pointer to ChannelGroup
+* Parameters(inout):None
+* Parameters (out): None
+* Return value: Dio_PortLevelType Level of a subset of the adjoining bits of a port
+* Description: This Service reads a subset of the adjoining bits of a port.
+******************************************************************************/
+Dio_PortLevelType Dio_ReadChannelGroup(const Dio_ChannelGroupType* ChannelGroupIdPtr );
 
-void Dio_GetVersionInfo(Std_VersionInfoType *versioninfo);//habiba
 
-Dio_LevelType Dio_FlipChannel(Dio_ChannelType ChannelId);//nihal
+void Dio_WriteChannelGroup(const Dio_ChannelGroupType* ChannelGroupIdPtr,Dio_PortLevelType Level );
 
+
+#if DIO_VERSION_INFO_API == TRUE
+void Dio_GetVersionInfo(Std_VersionInfoType *versioninfo);
+#endif
+
+#if DIO_FLIP_CHANNEL_API == TRUE
+Dio_LevelType Dio_FlipChannel(Dio_ChannelType ChannelId);
+#endif
 
 
 #endif /* DIO_H_ */

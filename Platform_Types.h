@@ -8,10 +8,13 @@
 #define PLATFORM_TYPES_H_
 
 
-#define FALSE       1
-#define TRUE        2
+#ifndef TRUE
+#define TRUE 1
+#endif
 
-
+#ifndef FALSE
+#define FALSE 0
+#endif
 
 typedef unsigned char 		uint8;
 typedef unsigned short 		uint16;

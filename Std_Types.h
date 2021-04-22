@@ -25,8 +25,8 @@ typedef struct
 } Std_VersionInfoType;
 
 
-#define E_OK            0x01U
-#define E_NOK           0x00U
+#define E_OK            0x00U
+#define E_NOT_OK        0x01U
 
 #define STD_HIGH        0x01U
 #define STD_LOW         0x00U

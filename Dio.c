@@ -7,7 +7,6 @@
  ********************************************************************************************/
 #include "Dio.h"
 
-
 #define PORTA	 (volatile uint8*)0x003B
 #define DDRA	 (volatile uint8*)0x003A
 #define PINA	 (volatile uint8*)0x0039
@@ -28,7 +27,6 @@
 
 #define OUTPUT				1
 #define INPUT				0
-
 
 
 Dio_LevelType Dio_ReadChannel(Dio_ChannelType ChannelId){
@@ -61,13 +59,17 @@ Dio_LevelType Dio_ReadChannel(Dio_ChannelType ChannelId){
 		DDRx  = DDRD;
 		break;
 	}
-	asm("cli");	/*Disable global interrupt*/
+	/* [SWS_Dio_00005] The Dio module’s read and write services shall ensure for all services,
+			 * that the data is consistent (Interruptible read-modify-write sequences are not allowed) */
+
+	DISABLE_ALL_INTERRUPTS();	/* Disable global interrupt*/
+
 	loc_levelType= GET_BIT(*Portx,PinId);
-	asm("sei");	/*Enable global interrupt*/
+
+	ENABLE_ALL_INTERRUPTS();	/*Enable global interrupt*/
 
 	return loc_levelType;
 }
-
 
 void Dio_WriteChannel(Dio_ChannelType ChannelId, Dio_LevelType Level)
 {
@@ -83,7 +85,7 @@ void Dio_WriteChannel(Dio_ChannelType ChannelId, Dio_LevelType Level)
 	{
 	case DIO_PORT_A:
 		Portx = PORTA;
-		//DDRx  = &DDRA;
+		DDRx  = DDRA;
 		break;
 
 	case DIO_PORT_B:
@@ -102,12 +104,14 @@ void Dio_WriteChannel(Dio_ChannelType ChannelId, Dio_LevelType Level)
 		break;
 	}
 
-	if( GET_BIT(*DDRx, PinId) == OUTPUT )
+	if( GET_BIT(*DDRx, PinId) == OUTPUT )/* [SWS_Dio_00028] ?If the specified channel is configured as an output channel, the
+                                          * Dio_WriteChannel function shall set the specified Level for the specified channel. */
 	{
 		/* [SWS_Dio_00005] The Dio module’s read and write services shall ensure for all services,
-				that the data is consistent (Interruptible read-modify-write sequences are not allowed) */
+		 * that the data is consistent (Interruptible read-modify-write sequences are not allowed) */
 
-		asm("cli");	/*Disable global interrupt*/
+		DISABLE_ALL_INTERRUPTS();	/* Disable global interrupt*/
+
 		if( Level == STD_HIGH )
 		{
 			SET_BIT(*Portx, PinId );
@@ -118,19 +122,19 @@ void Dio_WriteChannel(Dio_ChannelType ChannelId, Dio_LevelType Level)
 		}
 		else
 		{
-			/* No Action Required */
+			/* No Action is Required */
 		}
-		asm("sei");	/*Enable global interrupt*/
+		ENABLE_ALL_INTERRUPTS();	/*Enable global interrupt*/
 	}
 	else
 	{
 		/* [SWS_Dio_00029] If the specified channel is configured as an input channel, the
-		 * Dio_WriteChannel function shall have no influence on the physical output.
-		 *
-		 * [SWS_Dio_00079] check if the specified channel is configured as an input channel, the
-		 * Dio_WriteChannel function shall have no influence on the result of the next Read-Service */
+		   Dio_WriteChannel function shall have no influence on the physical output.*/
+		/* [SWS_Dio_00079] check if the specified channel is configured as an input channel, the
+		   Dio_WriteChannel function shall have no influence on the result of the next Read-Service */
 	}
 }
+
 
 Dio_PortLevelType Dio_ReadChannelGroup(const Dio_ChannelGroupType* ChannelGroupIdPtr )
 {
@@ -138,9 +142,18 @@ Dio_PortLevelType Dio_ReadChannelGroup(const Dio_ChannelGroupType* ChannelGroupI
 //check if mask is correct
 	Dio_PortType Portx = ChannelGroupIdPtr->PortIndex;
 	Dio_PortLevelType Group_level;
-	asm("cli");	/*Disable global interrupt*/
+
+	/* [SWS_Dio_00005] The Dio module’s read and write services shall ensure for all services,
+	   that the data is consistent (Interruptible read-modify-write sequences are not allowed) */
+
+	DISABLE_ALL_INTERRUPTS();	/* Disable global interrupt */
    switch(Portx)
    {
+  /* [SWS_Dio_00037] The Dio_ReadChannelGroup function shall read a subset of
+     the adjoining bits of a port (channel group)*/
+  /* [SWS_Dio_00092] The Dio_ReadChannelGroup function shall do the masking of the channel group.*/
+  /* [SWS_Dio_00093] The Dio_ReadChannelGroup function shall do the shifting so
+     that the values read by the function are aligned to the LSB. */
    case DIO_PORT_A:
 	   Group_level = (((*PINA)&(ChannelGroupIdPtr->mask)) >> (ChannelGroupIdPtr->offset));
 	   break;
@@ -155,12 +168,11 @@ Dio_PortLevelType Dio_ReadChannelGroup(const Dio_ChannelGroupType* ChannelGroupI
 	   break;
    default:
 	   break;
-
    }
-
-   asm("sei");	/*Enable global interrupt*/
+   ENABLE_ALL_INTERRUPTS(); 	/*Enable global interrupt*/
    return Group_level;
 
 }
+
 
 
