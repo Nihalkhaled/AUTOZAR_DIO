@@ -1,10 +1,10 @@
-/*
- * Dio.c
- *
- *  Created on: Apr 18, 2021
- *      Author: Nihal khaled
- */
-
+/********************************************************************************************
+ * Module Name	:	Digital Input Output
+ * File Name	:	Dio.c
+ * Version		:	1.0.0
+ * Created on  	: 	18/04/2020
+ * Author      	: 	Nihal - Habiba - Nour
+ ********************************************************************************************/
 #include "Dio.h"
 
 
@@ -131,4 +131,36 @@ void Dio_WriteChannel(Dio_ChannelType ChannelId, Dio_LevelType Level)
 		 * Dio_WriteChannel function shall have no influence on the result of the next Read-Service */
 	}
 }
+
+Dio_PortLevelType Dio_ReadChannelGroup(const Dio_ChannelGroupType* ChannelGroupIdPtr )
+{
+
+//check if mask is correct
+	Dio_PortType Portx = ChannelGroupIdPtr->PortIndex;
+	Dio_PortLevelType Group_level;
+	asm("cli");	/*Disable global interrupt*/
+   switch(Portx)
+   {
+   case DIO_PORT_A:
+	   Group_level = (((*PINA)&(ChannelGroupIdPtr->mask)) >> (ChannelGroupIdPtr->offset));
+	   break;
+   case DIO_PORT_B:
+	   Group_level = (((*PINB)&(ChannelGroupIdPtr->mask)) >> (ChannelGroupIdPtr->offset));
+	   break;
+   case DIO_PORT_C:
+	   Group_level = (((*PINC)&(ChannelGroupIdPtr->mask)) >> (ChannelGroupIdPtr->offset));
+	   break;
+   case DIO_PORT_D:
+	   Group_level = (((*PIND)&(ChannelGroupIdPtr->mask)) >> (ChannelGroupIdPtr->offset));
+	   break;
+   default:
+	   break;
+
+   }
+
+   asm("sei");	/*Enable global interrupt*/
+   return Group_level;
+
+}
+
 

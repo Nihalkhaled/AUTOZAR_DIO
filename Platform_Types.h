@@ -1,12 +1,15 @@
-/*
- * Platform_Types.h
- *
- *  Created on: Apr 18, 2021
- *      Author: LENOVO
- */
-
+/********************************************************************************************s
+ * File Name	:	Platform_Types.h
+ * Version		:	1.0.0
+ * Created on  	: 	18/04/2020
+ * Author      	: 	Nihal - Habiba - Nour
+ ********************************************************************************************/
 #ifndef PLATFORM_TYPES_H_
 #define PLATFORM_TYPES_H_
+
+
+#define FALSE       1
+#define TRUE        2
 
 
 

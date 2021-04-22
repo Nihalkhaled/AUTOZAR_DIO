@@ -1,9 +1,9 @@
-/*
- * Compiler.h
- *
- *  Created on: Apr 18, 2021
- *      Author: Nihal khaled
- */
+/********************************************************************************************
+ * File Name	:	Compiler.h
+ * Version		:	1.0.0
+ * Created on  	: 	18/04/2020
+ * Author      	: 	Nihal - Habiba - Nour
+ ********************************************************************************************/
 
 #ifndef COMPILER_H_
 #define COMPILER_H_

@@ -1,15 +1,15 @@
-/*
- * Dio_int.h
- *
- *  Created on: April 18, 2021
- *      Author: Nihal khaled
- */
+/********************************************************************************************
+ * Module Name	:	Digital Input Output Configurations
+ * File Name	:	Dio.h
+ * Version		:	1.0.0
+ * Created on  	: 	18/04/2020
+ * Author      	: 	Nihal - Habiba - Nour
+ ********************************************************************************************/
 
 #ifndef DIO_H_
 #define DIO_H_
 
 #include "Std_Types.h"
-#include "Dio_Cfg.h"
 
 /* Dio Types */
 
@@ -17,7 +17,6 @@ typedef uint8 Dio_ChannelType;
 typedef uint8 Dio_PortType;
 typedef uint8 Dio_LevelType;
 typedef uint8 Dio_PortLevelType;
-
 
 
 /*  Dio_ChannelGroupConfiguration types */
@@ -28,6 +27,21 @@ typedef struct
   Dio_PortType PortIndex;
 
 } Dio_ChannelGroupType;
+
+#include "Dio_Cfg.h"
+
+/* A macro used to validate channel group id */
+#define DIO_IS_CHANNEL_GROUPMSK_VALID(group)(                  \
+		                                    (group == 0x01) || \
+		                                    (group == 0x03) || \
+		                                    (group == 0x07) || \
+		                                    (group == 0x0F) || \
+		                                    (group == 0x1F) || \
+		                                    (group == 0x3F) || \
+		                                    (group == 0x7F) || \
+		                                    (group == 0xFF)    \
+)
+
 
 
 /*                DIO_CHANNEL_IDs           */
