@@ -35,9 +35,8 @@
 #define REG_INPUT           0x00
 #define REG_OUTPUT          0xFF
 
-
-Dio_LevelType Dio_ReadChannel(Dio_ChannelType ChannelId){
-
+Dio_LevelType Dio_ReadChannel(Dio_ChannelType ChannelId)
+{
 	uint8 PortId,PinId,loc_levelType;
 	volatile uint8 * DDRx;
 	volatile uint8 * Portx;
@@ -45,6 +44,22 @@ Dio_LevelType Dio_ReadChannel(Dio_ChannelType ChannelId){
 
 	PortId = ChannelId  /8 ;
 	PinId  = ChannelId  %8 ;
+
+	/*
+	 * [SWS_Dio_00074] If development error detection is enabled, the services Dio_ReadChannel, Dio_WriteChannel
+	 * and Dio_FlipChannel shall check the “ChannelId” parameter to be valid within the current configuration. If the
+	 * “ChannelId” parameter is invalid, the functions shall report the error code DIO_E_PARAM_INVALID_CHANNEL_ID to the DET.
+	 *
+	 * [SWS_Dio_00118] If development errors are enabled and an error ocurred the Dio module’s read functions
+	 * shall return with the value '0'
+	 */
+#if DIO_DevErrorDetect_API == TRUE
+	if(ChannelId > MAX_NUM_DIO_PINS)
+	{
+		Det_ReportError(DIO_MODULE_ID, DIO_INSTANCE_ID, DIO_READ_CHANNEL_SID,DIO_E_PARAM_INVALID_CHANNEL_ID);
+		return 0;
+	}
+#endif
 
 	switch(PortId){
 	/*in case of PORT A*/
@@ -95,6 +110,8 @@ Dio_LevelType Dio_ReadChannel(Dio_ChannelType ChannelId){
 	  specified DIO channel*/
 	return loc_levelType;
 }
+
+
 
 
 void Dio_WriteChannel(Dio_ChannelType ChannelId, Dio_LevelType Level)
@@ -263,6 +280,17 @@ Dio_PortLevelType Dio_ReadPort(Dio_PortType PortId)
 void Dio_WritePort(Dio_PortType PortId, Dio_PortLevelType Level){
 	volatile uint8 * DDRx;
 	volatile uint8 * Portx;
+	/*
+	 *  [SWS_Dio_00075] If development error detection is enabled, the functions Dio_ReadPort and Dio_WritePort shall check the
+	 *   “PortId” parameter to be valid within the current configuration. If the “PortId” parameter is invalid,
+	 *   the functions shall report the error code DIO_E_PARAM_INVALID_PORT_ID to the DET.
+	 */
+#if DIO_DevErrorDetect_API == TRUE
+	if(PortId > MAX_NUM_DIO_PORTS){
+		Det_ReportError(DIO_MODULE_ID, DIO_INSTANCE_ID, DIO_WRITE_PORT_SID,DIO_E_PARAM_INVALID_PORT_ID);
+	}
+#endif
+
 	switch(PortId){
 	/*in case of PORT A*/
 	case DIO_PORT_A:
@@ -523,6 +551,41 @@ Dio_LevelType Dio_FlipChannel(Dio_ChannelType ChannelId)
 	return ChannelLevelType;
 
 }
+
+#if DIO_VERSION_INFO_API == TRUE
+void Dio_GetVersionInfo(Std_VersionInfoType *versioninfo)
+{
+		Std_ReturnType LocalError =E_OK;
+#if DIO_DevErrorDetect_API == STD_ON
+		/* Check the input arguments */
+		if ( versioninfo == NULL )
+		{
+			/*[SWS_Dio_00114] ----> check the input arguments is NUll Pointer */
+			Det_ReportError(DIO_MODULE_ID,DIO_INSTANCE_ID,
+					DIO_WRITE_PORT_SID, DIO_E_PARAM_POINTER);
+			/* Set the local error to NOK */
+			LocalError = E_NOT_OK;
+		}
+#endif
+		if (LocalError == E_OK )
+		{
+		    versioninfo->vendorID         = DIO_VENDOR_ID          ;
+			versioninfo->moduleID         = DIO_MODULE_ID          ;
+			versioninfo->instanceID       = DIO_INSTANCE_ID        ;
+			versioninfo->sw_major_version = DIO_SW_MAJOR_VERSION   ;
+			versioninfo->sw_minor_version = DIO_SW_MINOR_VERSION   ;
+			versioninfo->sw_patch_version = DIO_SW_PATCH_VERSION   ;
+		}
+		else
+		{
+
+		}
+}
+
+#endif
+
+
+
 
 
 
