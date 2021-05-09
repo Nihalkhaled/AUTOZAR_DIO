@@ -38,6 +38,8 @@
 Dio_LevelType Dio_ReadChannel(Dio_ChannelType ChannelId)
 {
 	uint8 PortId,PinId,loc_levelType;
+	Std_ReturnType LocalError = E_OK;
+
 	volatile uint8 * DDRx;
 	volatile uint8 * Portx;
 	volatile uint8 * Pinx;
@@ -57,57 +59,66 @@ Dio_LevelType Dio_ReadChannel(Dio_ChannelType ChannelId)
 	if(ChannelId > MAX_NUM_DIO_PINS)
 	{
 		Det_ReportError(DIO_MODULE_ID, DIO_INSTANCE_ID, DIO_READ_CHANNEL_SID,DIO_E_PARAM_INVALID_CHANNEL_ID);
-		return 0;
 	}
 #endif
+	if(LocalError)
+	{
+		switch(PortId){
+		/*in case of PORT A*/
+		case DIO_PORT_A:
+			Portx = PORTA;
+			DDRx  = DDRA;
+			Pinx=PINA;
+			break;
+			/*in case of PORT B*/
+		case DIO_PORT_B:
+			Portx = PORTB;
+			DDRx = DDRB;
+			Pinx=PINB;
+			break;
+			/*in case of PORT C*/
+		case DIO_PORT_C:
+			Portx = PORTC;
+			DDRx  = DDRC;
+			Pinx = PINC;
+			break;
+			/*in case of PORT D*/
+		case DIO_PORT_D:
+			Portx = PORTD;
+			DDRx  = DDRD;
+			Pinx=PIND;
+			break;
+		}
 
-	switch(PortId){
-	/*in case of PORT A*/
-	case DIO_PORT_A:
-		Portx = PORTA;
-		DDRx  = DDRA;
-		Pinx=PINA;
-		break;
-		/*in case of PORT B*/
-	case DIO_PORT_B:
-		Portx = PORTB;
-		DDRx = DDRB;
-		Pinx=PINB;
-		break;
-		/*in case of PORT C*/
-	case DIO_PORT_C:
-		Portx = PORTC;
-		DDRx  = DDRC;
-		Pinx = PINC;
-		break;
-		/*in case of PORT D*/
-	case DIO_PORT_D:
-		Portx = PORTD;
-		DDRx  = DDRD;
-		Pinx=PIND;
-		break;
-	}
-
-	/* [SWS_Dio_00005] The Dio module read and write services shall ensure for all services,
+		/* [SWS_Dio_00005] The Dio module read and write services shall ensure for all services,
        that the data is consistent (Interruptible read-modify-write sequences are not allowed) */
-	DISABLE_ALL_INTERRUPTS();
-	/*The Dio_ReadChannel function shall read the level of a
+		DISABLE_ALL_INTERRUPTS();
+		/*The Dio_ReadChannel function shall read the level of a
       single DIO channel. (SRS_Dio_12008)*/
-	if (GET_BIT(*DDRx,PinId) == OUTPUT)
-	{
-		loc_levelType = GET_BIT(*Portx,PinId);
-	}
-	else if ((GET_BIT(*DDRx,PinId) == INPUT))
-	{
-		loc_levelType = GET_BIT(*Pinx,PinId);
+		if (GET_BIT(*DDRx,PinId) == OUTPUT)
+		{
+			loc_levelType = GET_BIT(*Portx,PinId);
+		}
+		else if ((GET_BIT(*DDRx,PinId) == INPUT))
+		{
+			loc_levelType = GET_BIT(*Pinx,PinId);
+		}
+		else
+		{
+
+		}
+		ENABLE_ALL_INTERRUPTS();
+		/*[SWS_Dio_00027] The Dio_ReadChannel function shall return the value of the
+	  specified DIO channel*/
 	}
 	else
 	{
 
+		/* [SWS_Dio_00118] If development errors are enabled and an error ocurred the Dio
+		 *  module's read functions shall return with the value '0'. */
+		loc_levelType =0;
+
 	}
-	ENABLE_ALL_INTERRUPTS();
-	/*[SWS_Dio_00027] The Dio_ReadChannel function shall return the value of the
-	  specified DIO channel*/
 	return loc_levelType;
 }
 
@@ -203,12 +214,18 @@ void Dio_WriteChannel(Dio_ChannelType ChannelId, Dio_LevelType Level)
 
 Dio_PortLevelType Dio_ReadPort(Dio_PortType PortId)
 {
+	Std_ReturnType PortError = E_OK;
+	Dio_PortLevelType Port_level;
+	volatile uint8 * DDRx;
+	volatile uint8 * PINx;
+	volatile uint8 * PORTx;
 
-		/*
-	 * [SWS_Dio_00075] ⌈ If development error detection is enabled, the functions 
-	 *  Dio_ReadPort and Dio_WritePort shall check the “PortId” parameter to be valid 
-     *  within the current configuration. If the “PortId” parameter is invalid, the functions shall 
-     *  report the error code DIO_E_PARAM_INVALID_PORT_ID to the DET.
+
+	/*
+	 * [SWS_Dio_00075] ⌈ If development error detection is enabled, the functions
+	 *  Dio_ReadPort and Dio_WritePort shall check the “PortId” parameter to be valid
+	 *  within the current configuration. If the “PortId” parameter is invalid, the functions shall
+	 *  report the error code DIO_E_PARAM_INVALID_PORT_ID to the DET.
 
 	 * [SWS_Dio_00118] If development errors are enabled and an error ocurred the Dio module�s read functions
 	 * shall return with the value '0'
@@ -217,80 +234,83 @@ Dio_PortLevelType Dio_ReadPort(Dio_PortType PortId)
 	if(PortId > MAX_NUM_DIO_PORTS)
 	{
 		Det_ReportError(DIO_MODULE_ID, DIO_INSTANCE_ID, DIO_READ_CHANNEL_SID,DIO_E_PARAM_INVALID_PORT_ID);
-		return 0;
 	}
 #endif
-	
-	Dio_PortLevelType Port_level;
-	volatile uint8 * DDRx;
-	volatile uint8 * PINx;
-	volatile uint8 * PORTx;
 
-	/* [SWS_Dio_00005] The DIO modules read and write services shall ensure for all services,
-	 * that the data is consistent (Interruptible read-modify-write sequences are not allowed) */
+	if(PortError == E_OK)
+	{
+		/* [SWS_Dio_00005] The DIO modules read and write services shall ensure for all services,
+		 * that the data is consistent (Interruptible read-modify-write sequences are not allowed) */
 
-	DISABLE_ALL_INTERRUPTS();	/* Disable global interrupt*/
+		DISABLE_ALL_INTERRUPTS();	/* Disable global interrupt*/
 
-	/*[SWS_Dio_00026] The configuration process for Dio module shall provide symbolic
+		/*[SWS_Dio_00026] The configuration process for Dio module shall provide symbolic
 	names for each configured DIO channel, port and group*/
 
-	switch(PortId)
-	{
-	case DIO_PORT_A:
-		DDRx = DDRA;
-		PINx = PINA;
-		PORTx = PORTA;
-		break;
-	case DIO_PORT_B:
-		DDRx = DDRB;
-		PINx = PINB;
-		PORTx = PORTB;
-		break;
-	case DIO_PORT_C:
-		DDRx = DDRC;
-		PINx = PINC;
-		PORTx = PORTC;
-		break;
-	case DIO_PORT_D:
-		DDRx = DDRD;
-		PINx = PINC;
-		PORTx = PORTD;
-		break;
-	default:
-		break;
-	}
+		switch(PortId)
+		{
+		case DIO_PORT_A:
+			DDRx = DDRA;
+			PINx = PINA;
+			PORTx = PORTA;
+			break;
+		case DIO_PORT_B:
+			DDRx = DDRB;
+			PINx = PINB;
+			PORTx = PORTB;
+			break;
+		case DIO_PORT_C:
+			DDRx = DDRC;
+			PINx = PINC;
+			PORTx = PORTC;
+			break;
+		case DIO_PORT_D:
+			DDRx = DDRD;
+			PINx = PINC;
+			PORTx = PORTD;
+			break;
+		default:
+			break;
+		}
 
-	/*[SWS_Dio_00012] The Dio module’s read functions shall work on input and output
+		/*[SWS_Dio_00012] The Dio module’s read functions shall work on input and output
 	channels.*/
 
-	/*[SWS_Dio_00013] The Dio_ReadPort function shall read the levels of all
+		/*[SWS_Dio_00013] The Dio_ReadPort function shall read the levels of all
     channels of one port. A bit value '0' indicates that the corresponding channel is
     physical STD_LOW, a bit value '1' indicates that the corresponding channel is physical
     STD_HIGH.*/
 
-	/*[SWS_Dio_00031] The Dio_ReadPort function shall return the level of all
+		/*[SWS_Dio_00031] The Dio_ReadPort function shall return the level of all
 	channels of that port.*/
 
-	if(*DDRx == OUTPUT)
-	{
-		/* [SWS_Dio_00084] If the microcontroller does not support the direct read-back of a
+		if(*DDRx == OUTPUT)
+		{
+			/* [SWS_Dio_00084] If the microcontroller does not support the direct read-back of a
 		                       pin value, the Dio module’s read functions shall provide the value of the output
 		                       register, when they are used on a channel which is configured as an output channel */
 #if DIO_READ_BACK == FALSE
-		Port_level = *PORTx;
+			Port_level = *PORTx;
 #else
-		/* [SWS_Dio_00083] If the microcontroller supports the direct read-back of a pin
+			/* [SWS_Dio_00083] If the microcontroller supports the direct read-back of a pin
                            value, the Dio module’s read functions shall provide the real pin level, when they are
                            used on a channel which is configured as an output channe */
-		Port_level = PORTx;
+			Port_level = PORTx;
 #endif
+		}
+		else
+		{
+			Port_level = *PINx;
+		}
+
+		ENABLE_ALL_INTERRUPTS(); 	/*Enable global interrupt*/
 	}
 	else
 	{
-		Port_level = *PINx;
+		/* [SWS_Dio_00118] If development errors are enabled and an error ocurred the Dio
+		 *  module's read functions shall return with the value '0'. */
+		Port_level = 0;
 	}
-
-	ENABLE_ALL_INTERRUPTS(); 	/*Enable global interrupt*/
 	return Port_level;
 }
 
@@ -298,6 +318,8 @@ Dio_PortLevelType Dio_ReadPort(Dio_PortType PortId)
 void Dio_WritePort(Dio_PortType PortId, Dio_PortLevelType Level){
 	volatile uint8 * DDRx;
 	volatile uint8 * Portx;
+	Std_ReturnType PortError = E_OK;
+
 	/*
 	 *  [SWS_Dio_00075] If development error detection is enabled, the functions Dio_ReadPort and Dio_WritePort shall check the
 	 *   �PortId� parameter to be valid within the current configuration. If the �PortId� parameter is invalid,
@@ -309,95 +331,143 @@ void Dio_WritePort(Dio_PortType PortId, Dio_PortLevelType Level){
 	}
 #endif
 
-	switch(PortId){
-	/*in case of PORT A*/
-	case DIO_PORT_A:
-		Portx = PORTA;
-		DDRx= DDRA;
-		break;
-		/*in case of PORT B*/
-	case DIO_PORT_B:
-		Portx = PORTB;
-		DDRx=DDRB;
-		break;
-		/*in case of PORT C*/
-	case DIO_PORT_C:
-		Portx = PORTC;
-		DDRx  = DDRC;
-		break;
-		/*in case of PORT C*/
-	case DIO_PORT_D:
-		Portx = PORTD;
-		DDRx  = DDRD;
-		break;
-	}
-
-	/* [SWS_Dio_00005] The Dio module read and write services shall ensure for all services,
-		   that the data is consistent (Interruptible read-modify-write sequences are not allowed) */
-	DISABLE_ALL_INTERRUPTS();
-
-	/* [SWS_Dio_00034] The Dio_WritePort function shall set the specified value for the specified port. (SRS_Dio_12003)
-	 *
-	 * [SWS_Dio_00119] If development errors are enabled and an error ocurred, the Dio module�s write functions
-	 * shall NOT process the write command. (SRS_SPAL_12448)
-	 *
-	 * [SWS_Dio_00105] When writing a port which is smaller than the Dio_PortType
-	 * using the Dio_WritePort function, the function shall ignore the MSB. ()
-	 */
-	if(*DDRx == REG_OUTPUT)
+	if(PortError == E_OK)
 	{
-		ASSIGN_REG(*Portx,Level);
-	}
-	/* When the Dio_WritePort function is called, DIO Channels
+		switch(PortId){
+		/*in case of PORT A*/
+		case DIO_PORT_A:
+			Portx = PORTA;
+			DDRx= DDRA;
+			break;
+			/*in case of PORT B*/
+		case DIO_PORT_B:
+			Portx = PORTB;
+			DDRx=DDRB;
+			break;
+			/*in case of PORT C*/
+		case DIO_PORT_C:
+			Portx = PORTC;
+			DDRx  = DDRC;
+			break;
+			/*in case of PORT C*/
+		case DIO_PORT_D:
+			Portx = PORTD;
+			DDRx  = DDRD;
+			break;
+		}
+
+		/* [SWS_Dio_00005] The Dio module read and write services shall ensure for all services,
+		   that the data is consistent (Interruptible read-modify-write sequences are not allowed) */
+		DISABLE_ALL_INTERRUPTS();
+
+		/* [SWS_Dio_00034] The Dio_WritePort function shall set the specified value for the specified port. (SRS_Dio_12003)
+		 *
+		 * [SWS_Dio_00119] If development errors are enabled and an error ocurred, the Dio module�s write functions
+		 * shall NOT process the write command. (SRS_SPAL_12448)
+		 *
+		 * [SWS_Dio_00105] When writing a port which is smaller than the Dio_PortType
+		 * using the Dio_WritePort function, the function shall ignore the MSB. ()
+		 */
+		if(*DDRx == REG_OUTPUT)
+		{
+			ASSIGN_REG(*Portx,Level);
+		}
+		/* When the Dio_WritePort function is called, DIO Channels
 		   that are configured as input shall remain unchanged. (SRS_Dio_12003) */
+		else
+		{
+		}
+		ENABLE_ALL_INTERRUPTS();
+	}
 	else
 	{
+		/* [SWS_Dio_00119] If development errors are enabled and an error ocurred,
+		 * the Dio module write function shall NOT process the write command */
 	}
-	ENABLE_ALL_INTERRUPTS();
 }
-
 
 
 Dio_PortLevelType Dio_ReadChannelGroup(const Dio_ChannelGroupType* ChannelGroupIdPtr )
 {
 
-	//check if mask is correct
+	Std_ReturnType LocalChannelError = E_OK;
 	Dio_PortType Portx = ChannelGroupIdPtr->PortIndex;
 	Dio_PortLevelType Group_level;
 
-	/* [SWS_Dio_00005] The Dio module�s read and write services shall ensure for all services,
+#if DIO_DevErrorDetect_API == TRUE
+
+	if ( NULL_PTR == ChannelGroupIdPtr)
+	{
+		Det_ReportError(DIO_MODULE_ID, DIO_INSTANCE_ID, DIO_READ_CHANNEL_GROUP_SID, DIO_E_PARAM_POINTER);
+		LocalChannelError = E_NOT_OK;
+	}
+	if (!DIO_IS_CHANNEL_GROUP_VALID((ChannelGroupIdPtr->mask >> ChannelGroupIdPtr->offset))	//check if mask is correct
+			{
+		Det_ReportError(DIO_MODULE_ID, DIO_INSTANCE_ID, DIO_READ_CHANNEL_GROUP_SID, DIO_E_PARAM_INVALID_GROUP);
+		LocalChannelError = E_NOT_OK;
+
+			}
+#endif
+
+	if (LocalChannelError == E_OK)
+	{
+
+		/* [SWS_Dio_00005] The Dio module�s read and write services shall ensure for all services,
 	   that the data is consistent (Interruptible read-modify-write sequences are not allowed) */
 
-	DISABLE_ALL_INTERRUPTS();	/* Disable global interrupt */
-	switch(Portx)
-	{
-	/* [SWS_Dio_00037] The Dio_ReadChannelGroup function shall read a subset of
+		DISABLE_ALL_INTERRUPTS();	/* Disable global interrupt */
+		switch(Portx)
+		{
+		/* [SWS_Dio_00037] The Dio_ReadChannelGroup function shall read a subset of
      the adjoining bits of a port (channel group)*/
-	/* [SWS_Dio_00092] The Dio_ReadChannelGroup function shall do the masking of the channel group.*/
-	/* [SWS_Dio_00093] The Dio_ReadChannelGroup function shall do the shifting so
+		/* [SWS_Dio_00092] The Dio_ReadChannelGroup function shall do the masking of the channel group.*/
+		/* [SWS_Dio_00093] The Dio_ReadChannelGroup function shall do the shifting so
      that the values read by the function are aligned to the LSB. */
-	case DIO_PORT_A:
-		Group_level = (((*PINA)&(ChannelGroupIdPtr->mask)) >> (ChannelGroupIdPtr->offset));
-		break;
-	case DIO_PORT_B:
-		Group_level = (((*PINB)&(ChannelGroupIdPtr->mask)) >> (ChannelGroupIdPtr->offset));
-		break;
-	case DIO_PORT_C:
-		Group_level = (((*PINC)&(ChannelGroupIdPtr->mask)) >> (ChannelGroupIdPtr->offset));
-		break;
-	case DIO_PORT_D:
-		Group_level = (((*PIND)&(ChannelGroupIdPtr->mask)) >> (ChannelGroupIdPtr->offset));
-		break;
-	default:
-		break;
+		case DIO_PORT_A:
+			Group_level = (((*PINA)&(ChannelGroupIdPtr->mask)) >> (ChannelGroupIdPtr->offset));
+			break;
+		case DIO_PORT_B:
+			Group_level = (((*PINB)&(ChannelGroupIdPtr->mask)) >> (ChannelGroupIdPtr->offset));
+			break;
+		case DIO_PORT_C:
+			Group_level = (((*PINC)&(ChannelGroupIdPtr->mask)) >> (ChannelGroupIdPtr->offset));
+			break;
+		case DIO_PORT_D:
+			Group_level = (((*PIND)&(ChannelGroupIdPtr->mask)) >> (ChannelGroupIdPtr->offset));
+			break;
+		default:
+			break;
+		}
+		ENABLE_ALL_INTERRUPTS(); 	/*Enable global interrupt*/
 	}
-	ENABLE_ALL_INTERRUPTS(); 	/*Enable global interrupt*/
+	else
+	{
+		/* [SWS_Dio_00118] If development errors are enabled and an error ocurred the Dio
+		 *  module's read functions shall return with the value '0'. */
+		Group_level = 0;
+	}
 	return Group_level;
 
 }
 
 void Dio_WriteChannelGroup(const Dio_ChannelGroupType* ChannelGroupIdPtr,Dio_PortLevelType Level )
 {
+	Std_ReturnType LocalChannelError = E_OK;
+
+#if DIO_DevErrorDetect_API == TRUE
+
+	if ( NULL_PTR == ChannelGroupIdPtr)
+	{
+		Det_ReportError(DIO_MODULE_ID, DIO_INSTANCE_ID, DIO_READ_CHANNEL_GROUP_SID, DIO_E_PARAM_POINTER);
+		LocalChannelError = E_NOT_OK;
+	}
+	if (!DIO_IS_CHANNEL_GROUP_VALID((ChannelGroupIdPtr->mask >> ChannelGroupIdPtr->offset))	//check if mask is correct
+			{
+		Det_ReportError(DIO_MODULE_ID, DIO_INSTANCE_ID, DIO_READ_CHANNEL_GROUP_SID, DIO_E_PARAM_INVALID_GROUP);
+		LocalChannelError = E_NOT_OK;
+
+			}
+#endif
 	/*[SWS_Dio_00026] The configuration process for DIO module shall provide symbolic
       names for each configured DIO channel, port and group.*/
 
@@ -406,6 +476,8 @@ void Dio_WriteChannelGroup(const Dio_ChannelGroupType* ChannelGroupIdPtr,Dio_Por
 	/* [SWS_Dio_00005] The DIO module�s read and write services shall ensure for all services,
 		   that the data is consistent (Interruptible read-modify-write sequences are not allowed) */
 
+	if (LocalChannelError == E_OK)
+{
 	DISABLE_ALL_INTERRUPTS();	/* Disable global interrupt */
 
 	/*[SWS_Dio_00039] The Dio_WriteChannelGroup function shall set a subset of
@@ -469,6 +541,12 @@ void Dio_WriteChannelGroup(const Dio_ChannelGroupType* ChannelGroupIdPtr,Dio_Por
 	/*[SWS_Dio_00056] A channel group is a formal logical combination of several
               adjoining DIO channels within a DIO port.*/
 	ENABLE_ALL_INTERRUPTS(); 	/*Enable global interrupt*/
+}
+	else
+	{
+		/* [SWS_Dio_00119] If development errors are enabled and an error ocurred,
+		 * the Dio module write function shall NOT process the write command */
+	}
 }
 
 Dio_LevelType Dio_FlipChannel(Dio_ChannelType ChannelId)
@@ -573,31 +651,31 @@ Dio_LevelType Dio_FlipChannel(Dio_ChannelType ChannelId)
 #if DIO_VERSION_INFO_API == TRUE
 void Dio_GetVersionInfo(Std_VersionInfoType *versioninfo)
 {
-		Std_ReturnType LocalError =E_OK;
+	Std_ReturnType LocalError =E_OK;
 #if DIO_DevErrorDetect_API == STD_ON
-		/* Check the input arguments */
-		if ( versioninfo == NULL )
-		{
-			/*[SWS_Dio_00114] ----> check the input arguments is NUll Pointer */
-			Det_ReportError(DIO_MODULE_ID,DIO_INSTANCE_ID,
-					DIO_WRITE_PORT_SID, DIO_E_PARAM_POINTER);
-			/* Set the local error to NOK */
-			LocalError = E_NOT_OK;
-		}
+	/* Check the input arguments */
+	if ( versioninfo == NULL_PTR )
+	{
+		/*[SWS_Dio_00114] ----> check the input arguments is NUll Pointer */
+		Det_ReportError(DIO_MODULE_ID,DIO_INSTANCE_ID,
+				DIO_WRITE_PORT_SID, DIO_E_PARAM_POINTER);
+		/* Set the local error to NOK */
+		LocalError = E_NOT_OK;
+	}
 #endif
-		if (LocalError == E_OK )
-		{
-		    versioninfo->vendorID         = DIO_VENDOR_ID          ;
-			versioninfo->moduleID         = DIO_MODULE_ID          ;
-			versioninfo->instanceID       = DIO_INSTANCE_ID        ;
-			versioninfo->sw_major_version = DIO_SW_MAJOR_VERSION   ;
-			versioninfo->sw_minor_version = DIO_SW_MINOR_VERSION   ;
-			versioninfo->sw_patch_version = DIO_SW_PATCH_VERSION   ;
-		}
-		else
-		{
+	if (LocalError == E_OK )
+	{
+		versioninfo->vendorID         = DIO_VENDOR_ID          ;
+		versioninfo->moduleID         = DIO_MODULE_ID          ;
+		versioninfo->instanceID       = DIO_INSTANCE_ID        ;
+		versioninfo->sw_major_version = DIO_SW_MAJOR_VERSION   ;
+		versioninfo->sw_minor_version = DIO_SW_MINOR_VERSION   ;
+		versioninfo->sw_patch_version = DIO_SW_PATCH_VERSION   ;
+	}
+	else
+	{
 
-		}
+	}
 }
 
 #endif
