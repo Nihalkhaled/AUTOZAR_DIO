@@ -14,7 +14,7 @@
 #define MAX_NUM_DIO_PINS							        31
 
 /* Maximum number of Dio Ports */
-#define MAX_NUM_DIO_PORTS							        2
+#define MAX_NUM_DIO_PORTS							        4
 
 /* Number of the configured Dio Channel */
 #define DIO_NUMBER_OF_CONFIGURED_CHANNELS				   	3
@@ -45,6 +45,9 @@
 
 /*Adds or removes the Dio_GetVersionInfo API from the code.*/
 #define DIO_VERSION_INFO_API                               FALSE
+
+/* Pre-Compile option for development error detection API */
+#define DIO_DevErrorDetect_API						       FALSE
 
 /* ConfiguredChannelGroups array which configure the required groups of channel in array in Dio_Lcfg.c */
 extern const Dio_ChannelGroupType ConfiguredChannelGroups[DIO_NUMBER_OF_CONFIGURED_CHANNEL_GROUP];

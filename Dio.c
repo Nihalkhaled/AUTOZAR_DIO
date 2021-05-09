@@ -6,6 +6,11 @@
  * Author      	: 	Nihal - Habiba - Nour
  ********************************************************************************************/
 #include "Dio.h"
+#if DIO_DevErrorDetect_API == TRUE
+#include "Det.h"
+#endif
+#include "Dio_MemMap.h"
+#include "SchM_Dio.h"
 
 #define PORTA	 (volatile uint8*)0x003B
 #define DDRA	 (volatile uint8*)0x003A
@@ -97,62 +102,85 @@ void Dio_WriteChannel(Dio_ChannelType ChannelId, Dio_LevelType Level)
 	uint8 PortId,PinId;
 	volatile uint8 * DDRx;
 	volatile uint8 * Portx;
+	Std_ReturnType LocalError = E_OK;
 
 
-	PortId = ChannelId  / 8 ;
-	PinId  = ChannelId % 8 ;
-
-	switch (PortId)
+#if DIO_DevErrorDetect_API == TRUE
+	if (ChannelId > MAX_NUM_DIO_PINS)
 	{
-	case DIO_PORT_A:
-		Portx = PORTA;
-		DDRx  = DDRA;
-		break;
-
-	case DIO_PORT_B:
-		Portx = PORTB;
-		DDRx = DDRB;
-		break;
-
-	case DIO_PORT_C:
-		Portx = PORTC;
-		DDRx  = DDRC;
-		break;
-
-	case DIO_PORT_D:
-		Portx = PORTD;
-		DDRx  = DDRD;
-		break;
-	}
-
-	if( GET_BIT(*DDRx, PinId) == OUTPUT )/* [SWS_Dio_00028] ?If the specified channel is configured as an output channel, the
-	 * Dio_WriteChannel function shall set the specified Level for the specified channel. */
-	{
-		/* [SWS_Dio_00005] The Dio module�s read and write services shall ensure for all services,
-		 * that the data is consistent (Interruptible read-modify-write sequences are not allowed) */
-
-		DISABLE_ALL_INTERRUPTS();	/* Disable global interrupt*/
-
-		if( Level == STD_HIGH )
-		{
-			SET_BIT(*Portx, PinId );
-		}
-		else if ( Level == STD_LOW )
-		{
-			CLEAR_BIT(*Portx, PinId );
-		}
-		else
-		{
-			/* No Action is Required */
-		}
-		ENABLE_ALL_INTERRUPTS();	/*Enable global interrupt*/
+		Det_ReportError(DIO_MODULE_ID, DIO_INSTANCE_ID, DIO_WRITE_CHANNEL_SID, DIO_E_PARAM_INVALID_CHANNEL_ID);
+		LocalError = E_NOT_OK;
 	}
 	else
 	{
-		/* [SWS_Dio_00029] If the specified channel is configured as an input channel, the
-		   Dio_WriteChannel function shall have no influence on the physical output.*/
-		/* [SWS_Dio_00079] check if the specified channel is configured as an input channel, the
-		   Dio_WriteChannel function shall have no influence on the result of the next Read-Service */
+		/* No Action Required */
+	}
+#endif
+
+	/* In-case there are no errors */
+	if( LocalError == E_OK )
+	{
+
+		PortId = ChannelId  / 8 ;
+		PinId  = ChannelId % 8 ;
+
+		switch (PortId)
+		{
+		case DIO_PORT_A:
+			Portx = PORTA;
+			DDRx  = DDRA;
+			break;
+
+		case DIO_PORT_B:
+			Portx = PORTB;
+			DDRx = DDRB;
+			break;
+
+		case DIO_PORT_C:
+			Portx = PORTC;
+			DDRx  = DDRC;
+			break;
+
+		case DIO_PORT_D:
+			Portx = PORTD;
+			DDRx  = DDRD;
+			break;
+		}
+
+		if( GET_BIT(*DDRx, PinId) == OUTPUT )/* [SWS_Dio_00028] If the specified channel is configured as an output channel, the
+		 * Dio_WriteChannel function shall set the specified Level for the specified channel. */
+		{
+			/* [SWS_Dio_00005] The Dio moduleï¿½s read and write services shall ensure for all services,
+			 * that the data is consistent (Interruptible read-modify-write sequences are not allowed) */
+
+			DISABLE_ALL_INTERRUPTS();	/* Disable global interrupt*/
+
+			if( Level == STD_HIGH )
+			{
+				SET_BIT(*Portx, PinId );
+			}
+			else if ( Level == STD_LOW )
+			{
+				CLEAR_BIT(*Portx, PinId );
+			}
+			else
+			{
+				/* No Action is Required */
+			}
+			ENABLE_ALL_INTERRUPTS();	/*Enable global interrupt*/
+		}
+		else
+		{
+			/* [SWS_Dio_00029] If the specified channel is configured as an input channel, the
+			   Dio_WriteChannel function shall have no influence on the physical output.*/
+			/* [SWS_Dio_00079] check if the specified channel is configured as an input channel, the
+			   Dio_WriteChannel function shall have no influence on the result of the next Read-Service */
+		}
+	}
+	else
+	{
+		/* [SWS_Dio_00119] If development errors are enabled and an error ocurred,
+		 * the Dio module write function shall NOT process the write command */
 	}
 }
 
@@ -395,6 +423,105 @@ void Dio_WriteChannelGroup(const Dio_ChannelGroupType* ChannelGroupIdPtr,Dio_Por
 	/*[SWS_Dio_00056] A channel group is a formal logical combination of several
               adjoining DIO channels within a DIO port.*/
 	ENABLE_ALL_INTERRUPTS(); 	/*Enable global interrupt*/
+}
+
+Dio_LevelType Dio_FlipChannel(Dio_ChannelType ChannelId)
+{
+
+	uint8 PortId,PinId;
+	Dio_LevelType ChannelLevelType;
+	volatile uint8 * DDRx;
+	volatile uint8 * Pinx;
+	volatile uint8 * Portx;
+	Std_ReturnType localError = E_OK;
+
+
+
+#if DIO_DevErrorDetect_API == TRUE
+	/*If channel ID is greater than the highest pin number, report error and set local error variable to false so that function won't resume*/
+	if (ChannelId > MAX_NUM_DIO_PINS)
+	{
+		Det_ReportError(DIO_MODULE_ID, DIO_INSTANCE_ID, DIO_FLIP_CHANNEL_SID, DIO_E_PARAM_INVALID_CHANNEL_ID);
+		localError = E_NOT_OK;
+	}
+	else
+	{
+		/* No Action Required */
+	}
+#endif
+
+	if (localError == E_OK)
+	{
+		PortId = ChannelId  /8 ;
+		PinId  = ChannelId  %8 ;
+
+		switch(PortId){
+		/*in case of PORT A*/
+		case DIO_PORT_A:
+			Portx = PORTA;
+			DDRx  = DDRA;
+			Pinx = PINA;
+			break;
+
+		case DIO_PORT_B:
+			Portx = PORTB;
+			DDRx = DDRB;
+			Pinx = PINB;
+
+			break;
+
+		case DIO_PORT_C:
+			Portx = PORTC;
+			DDRx  = DDRC;
+			Pinx = PINC;
+
+			break;
+
+		case DIO_PORT_D:
+			Portx = PORTD;
+			DDRx  = DDRD;
+			Pinx = PIND;
+
+			break;
+		}
+		/* [SWS_Dio_00005] The Dio moduleï¿½s read and write services shall ensure for all services,
+		 * that the data is consistent (Interruptible read-modify-write sequences are not allowed) */
+
+		DISABLE_ALL_INTERRUPTS();	/* Disable global interrupt*/
+
+		if (GET_BIT(*DDRx,PinId) == OUTPUT)
+		{
+			ChannelLevelType = GET_BIT(*Portx,PinId);
+			if (ChannelLevelType == STD_HIGH)
+			{
+				CLEAR_BIT(*Portx, PinId);
+				ChannelLevelType = GET_BIT(*Portx,PinId);
+			}
+			else
+			{/* DIO_Val == STD_LOW */
+
+				SET_BIT(*Portx, PinId );
+				ChannelLevelType = GET_BIT(*Portx,PinId);
+			}
+		}
+		else
+		{
+			ChannelLevelType = GET_BIT(*Portx,PinId);
+			/*  Do nothing, Return its reading as it is */
+		}
+		ENABLE_ALL_INTERRUPTS();	/*Enable global interrupt*/
+
+	}
+	else
+	{
+
+		/* [SWS_Dio_00118] If development errors are enabled and an error ocurred the Dio
+		 *  module's read functions shall return with the value '0'. */
+		ChannelLevelType = 0;
+
+	}
+	return ChannelLevelType;
+
 }
 
 

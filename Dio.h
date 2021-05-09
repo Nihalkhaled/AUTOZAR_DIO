@@ -44,6 +44,27 @@ typedef struct
 		(Group_Msk  == 0xFF)    \
 )
 
+/* Module IDs*/
+#define	DIO_MODULE_ID				                (uint16)1
+#define	DIO_INSTANCE_ID		    	   	            (uint8) 0
+
+
+/* Services IDs*/
+#define DIO_READ_CHANNEL_SID                        (uint8)0x00
+#define DIO_WRITE_CHANNEL_SID                       (uint8)0x01
+#define DIO_READ_PORT_SID                           (uint8)0x02
+#define DIO_WRITE_PORT_SID                          (uint8)0x03
+#define DIO_READ_CHANNEL_GROUP_SID                  (uint8)0x04
+#define DIO_WRITE_CHANNEL_GROUP_SID                 (uint8)0x05
+#define DIO_GET_VERSION_INFO_SID	                (uint8)0x12
+#define DIO_FLIP_CHANNEL_SID                        (uint8)0x11
+
+/* DET codes  */
+#define DIO_E_PARAM_INVALID_CHANNEL_ID              (uint8)0x0A
+#define DIO_E_PARAM_INVALID_PORT_ID                 (uint8)0x14
+#define DIO_E_PARAM_INVALID_GROUP                   (uint8)0x1F
+#define DIO_E_PARAM_POINTER                         (uint8)0x20
+
 
 /*[SWS_Dio_00026] The configuration process for Dio module shall provide symbolic
 names for each configured DIO channel, port and group*/
@@ -176,6 +197,17 @@ void Dio_WriteChannelGroup(const Dio_ChannelGroupType* ChannelGroupIdPtr,Dio_Por
 void Dio_GetVersionInfo(Std_VersionInfoType *versioninfo);
 #endif
 
+/***************************************************************************
+* Service name: Dio_FlipChannel
+* Service ID[hex]: 0x11
+* Sync/Async: Synchronous
+* Reentrancy: Reentrant
+* Parameters (in): ChannelId ID of DIO channel -   Range(DIO_CHANNEL_0 -> DIO_CHANNEL_31)
+* Parameters(inout):None
+* Parameters (out): None
+* Return value: Level Value to be written -     Range (STD_LOW -> STD_HIGH)
+* Description: Service to flip (change from 1 to 0 or from 0 to 1) the level of a channel and return the level of the channel after flip.
+******************************************************************************/
 #if DIO_FLIP_CHANNEL_API == TRUE
 Dio_LevelType Dio_FlipChannel(Dio_ChannelType ChannelId);
 #endif
