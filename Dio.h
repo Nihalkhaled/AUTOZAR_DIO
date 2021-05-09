@@ -90,8 +90,18 @@ names for each configured DIO channel, port and group*/
 #define DIO_PORT_D			        ((uint8) 3)
 
 
-
-Dio_LevelType Dio_ReadChannel(Dio_ChannelType ChannelId);//habiba
+/******************************************************************************
+ * Service name: Dio_ReadChannel
+ * Service ID[hex]: 0x00
+ * Sync/Async: Synchronous
+ * Reentrancy: Reentrant
+ * Parameters (in): ChannelId ID of DIO channel -   Range(DIO_CHANNEL_0 -> DIO_CHANNEL_31)
+ * Parameters(inout):None
+ * Parameters (out): None
+ * Return value: Dio_LevelType -   Range(STD_LOW - STD_HIGH)
+ * Description: Returns the value of the specified DIO channel
+ *****************************************************************************/
+Dio_LevelType Dio_ReadChannel(Dio_ChannelType ChannelId);
 
 /******************************************************************************
  * Service name: Dio_WriteChannel
@@ -120,6 +130,18 @@ void Dio_WriteChannel(Dio_ChannelType ChannelId, Dio_LevelType Level);
  ******************************************************************************/
 Dio_PortLevelType Dio_ReadPort(Dio_PortType PortId);
 
+/***************************************************************************
+ * Service name: Dio_WritePort
+ * Service ID[hex]: 0x02
+ * Sync/Async: Synchronous
+ * Reentrancy: Reentrant
+  * Parameters (in): PortId: Port Id of DIO Port                   -   Range(DIO_PORT_A -> DIO_PORT_D)
+ *                 : Dio_PortLevelType : Level Value to be written -   Range (STD_LOW -> STD_HIGH)
+ * Parameters(inout):None
+ * Parameters (out): None
+ * Return value: None
+ * Description: Service to set a value of the port.
+ ******************************************************************************/
 void Dio_WritePort(Dio_PortType PortId, Dio_PortLevelType Level);
 
 /***************************************************************************

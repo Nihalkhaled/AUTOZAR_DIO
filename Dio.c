@@ -20,13 +20,15 @@
 #define DDRD	 (volatile uint8*)0x0031
 #define PIND	 (volatile uint8*)0x0030
 
-
 #define CLEAR_BIT(reg, n)        ((reg) &= ~(1 << (n)))
 #define SET_BIT(reg, n)          ((reg) |= 1 << (n))
 #define GET_BIT(reg, n)          (((reg) >> (n)) & 1)
+#define ASSIGN_REG(Reg,Value)    ((Reg)  = (Value) )
 
 #define OUTPUT				1
 #define INPUT				0
+#define REG_INPUT           0x00
+#define REG_OUTPUT          0xFF
 
 
 Dio_LevelType Dio_ReadChannel(Dio_ChannelType ChannelId){
@@ -34,6 +36,8 @@ Dio_LevelType Dio_ReadChannel(Dio_ChannelType ChannelId){
 	uint8 PortId,PinId,loc_levelType;
 	volatile uint8 * DDRx;
 	volatile uint8 * Portx;
+	volatile uint8 * Pinx;
+
 	PortId = ChannelId  /8 ;
 	PinId  = ChannelId  %8 ;
 
@@ -42,34 +46,51 @@ Dio_LevelType Dio_ReadChannel(Dio_ChannelType ChannelId){
 	case DIO_PORT_A:
 		Portx = PORTA;
 		DDRx  = DDRA;
+		Pinx=PINA;
 		break;
-
+		/*in case of PORT B*/
 	case DIO_PORT_B:
 		Portx = PORTB;
 		DDRx = DDRB;
+		Pinx=PINB;
 		break;
-
+		/*in case of PORT C*/
 	case DIO_PORT_C:
 		Portx = PORTC;
 		DDRx  = DDRC;
+		Pinx = PINC;
 		break;
-
+		/*in case of PORT D*/
 	case DIO_PORT_D:
 		Portx = PORTD;
 		DDRx  = DDRD;
+		Pinx=PIND;
 		break;
 	}
-	/* [SWS_Dio_00005] The Dio modules read and write services shall ensure for all services,
-	 * that the data is consistent (Interruptible read-modify-write sequences are not allowed) */
 
-	DISABLE_ALL_INTERRUPTS();	/* Disable global interrupt*/
+	/* [SWS_Dio_00005] The Dio module read and write services shall ensure for all services,
+       that the data is consistent (Interruptible read-modify-write sequences are not allowed) */
+	DISABLE_ALL_INTERRUPTS();
+	/*The Dio_ReadChannel function shall read the level of a
+      single DIO channel. (SRS_Dio_12008)*/
+	if (GET_BIT(*DDRx,PinId) == OUTPUT)
+	{
+		loc_levelType = GET_BIT(*Portx,PinId);
+	}
+	else if ((GET_BIT(*DDRx,PinId) == INPUT))
+	{
+		loc_levelType = GET_BIT(*Pinx,PinId);
+	}
+	else
+	{
 
-	loc_levelType= GET_BIT(*Portx,PinId);
-
-	ENABLE_ALL_INTERRUPTS();	/*Enable global interrupt*/
-
+	}
+	ENABLE_ALL_INTERRUPTS();
+	/*[SWS_Dio_00027] The Dio_ReadChannel function shall return the value of the
+	  specified DIO channel*/
 	return loc_levelType;
 }
+
 
 void Dio_WriteChannel(Dio_ChannelType ChannelId, Dio_LevelType Level)
 {
@@ -197,7 +218,7 @@ Dio_PortLevelType Dio_ReadPort(Dio_PortType PortId)
 #else
 		/* [SWS_Dio_00083] If the microcontroller supports the direct read-back of a pin
                            value, the Dio moduleâ€™s read functions shall provide the real pin level, when they are
-                           used on a channel which is configured as an output channel */
+                           used on a channel which is configured as an output channe */
 		Port_level = PORTx;
 #endif
 	}
@@ -209,6 +230,59 @@ Dio_PortLevelType Dio_ReadPort(Dio_PortType PortId)
 	ENABLE_ALL_INTERRUPTS(); 	/*Enable global interrupt*/
 	return Port_level;
 }
+
+
+void Dio_WritePort(Dio_PortType PortId, Dio_PortLevelType Level){
+	volatile uint8 * DDRx;
+	volatile uint8 * Portx;
+	switch(PortId){
+	/*in case of PORT A*/
+	case DIO_PORT_A:
+		Portx = PORTA;
+		DDRx= DDRA;
+		break;
+		/*in case of PORT B*/
+	case DIO_PORT_B:
+		Portx = PORTB;
+		DDRx=DDRB;
+		break;
+		/*in case of PORT C*/
+	case DIO_PORT_C:
+		Portx = PORTC;
+		DDRx  = DDRC;
+		break;
+		/*in case of PORT C*/
+	case DIO_PORT_D:
+		Portx = PORTD;
+		DDRx  = DDRD;
+		break;
+	}
+
+	/* [SWS_Dio_00005] The Dio module read and write services shall ensure for all services,
+		   that the data is consistent (Interruptible read-modify-write sequences are not allowed) */
+	DISABLE_ALL_INTERRUPTS();
+
+	/* [SWS_Dio_00034] The Dio_WritePort function shall set the specified value for the specified port. (SRS_Dio_12003)
+	 *
+	 * [SWS_Dio_00119] If development errors are enabled and an error ocurred, the Dio module’s write functions
+	 * shall NOT process the write command. (SRS_SPAL_12448)
+	 *
+	 * [SWS_Dio_00105] When writing a port which is smaller than the Dio_PortType
+	 * using the Dio_WritePort function, the function shall ignore the MSB. ()
+	 */
+	if(*DDRx == REG_OUTPUT)
+	{
+		ASSIGN_REG(*Portx,Level);
+	}
+	/* When the Dio_WritePort function is called, DIO Channels
+		   that are configured as input shall remain unchanged. (SRS_Dio_12003) */
+	else
+	{
+	}
+	ENABLE_ALL_INTERRUPTS();
+}
+
+
 
 Dio_PortLevelType Dio_ReadChannelGroup(const Dio_ChannelGroupType* ChannelGroupIdPtr )
 {
@@ -322,5 +396,6 @@ void Dio_WriteChannelGroup(const Dio_ChannelGroupType* ChannelGroupIdPtr,Dio_Por
               adjoining DIO channels within a DIO port.*/
 	ENABLE_ALL_INTERRUPTS(); 	/*Enable global interrupt*/
 }
+
 
 
