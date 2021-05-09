@@ -34,16 +34,19 @@ typedef struct
 
 /* A macro used to validate channel group id */
 #define DIO_IS_CHANNEL_GROUPMSK_VALID(Group_Msk )(                  \
-		                                    (Group_Msk  == 0x01) || \
-		                                    (Group_Msk  == 0x03) || \
-		                                    (Group_Msk  == 0x07) || \
-		                                    (Group_Msk  == 0x0F) || \
-		                                    (Group_Msk  == 0x1F) || \
-		                                    (Group_Msk  == 0x3F) || \
-		                                    (Group_Msk  == 0x7F) || \
-		                                    (Group_Msk  == 0xFF)    \
+		(Group_Msk  == 0x01) || \
+		(Group_Msk  == 0x03) || \
+		(Group_Msk  == 0x07) || \
+		(Group_Msk  == 0x0F) || \
+		(Group_Msk  == 0x1F) || \
+		(Group_Msk  == 0x3F) || \
+		(Group_Msk  == 0x7F) || \
+		(Group_Msk  == 0xFF)    \
 )
 
+
+/*[SWS_Dio_00026] The configuration process for Dio module shall provide symbolic
+names for each configured DIO channel, port and group*/
 
 /*                DIO_CHANNEL_IDs           */
 
@@ -80,7 +83,7 @@ typedef struct
 #define DIO_CHANNEL_30              ((uint8)30)
 #define DIO_CHANNEL_31              ((uint8)31)
 
-
+/*                DIO_PORT_IDs           */
 #define DIO_PORT_A			        ((uint8) 0)
 #define DIO_PORT_B			        ((uint8) 1)
 #define DIO_PORT_C			        ((uint8) 2)
@@ -91,38 +94,59 @@ typedef struct
 Dio_LevelType Dio_ReadChannel(Dio_ChannelType ChannelId);//habiba
 
 /******************************************************************************
-* Service name: Dio_WriteChannel
-* Service ID[hex]: 0x01
-* Sync/Async: Synchronous
-* Reentrancy: Reentrant
-* Parameters (in): ChannelId ID of DIO channel -   Range(DIO_CHANNEL_0 -> DIO_CHANNEL_31)
-*                : Level Value to be written -     Range (STD_LOW -> STD_HIGH)
-* Parameters(inout):None
-* Parameters (out): None
-* Return value: None
-* Description: Service to set a level of a channel
-*****************************************************************************/
+ * Service name: Dio_WriteChannel
+ * Service ID[hex]: 0x01
+ * Sync/Async: Synchronous
+ * Reentrancy: Reentrant
+ * Parameters (in): ChannelId ID of DIO channel -   Range(DIO_CHANNEL_0 -> DIO_CHANNEL_31)
+ *                : Level Value to be written -     Range (STD_LOW -> STD_HIGH)
+ * Parameters(inout):None
+ * Parameters (out): None
+ * Return value: None
+ * Description: Service to set a level of a channel
+ *****************************************************************************/
 void Dio_WriteChannel(Dio_ChannelType ChannelId, Dio_LevelType Level);
 
-
+/***************************************************************************
+ * Service name: Dio_ReadPort
+ * Service ID[hex]: 0x02
+ * Sync/Async: Synchronous
+ * Reentrancy: Reentrant
+ * Parameters (in): PortId
+ * Parameters(inout):None
+ * Parameters (out): None
+ * Return value: Dio_PortLevelType/Level of all channels of that port
+ * Description: Returns the levels of all channels of that port.
+ ******************************************************************************/
 Dio_PortLevelType Dio_ReadPort(Dio_PortType PortId);
 
 void Dio_WritePort(Dio_PortType PortId, Dio_PortLevelType Level);
 
 /***************************************************************************
-* Service name: Dio_ReadChannelGroup
-* Service ID[hex]: 0x04
-* Sync/Async: Synchronous
-* Reentrancy: Reentrant
-* Parameters (in): ChannelGroupIdPtr Pointer to ChannelGroup
-* Parameters(inout):None
-* Parameters (out): None
-* Return value: Dio_PortLevelType Level of a subset of the adjoining bits of a port
-* Description: This Service reads a subset of the adjoining bits of a port.
-******************************************************************************/
+ * Service name: Dio_ReadChannelGroup
+ * Service ID[hex]: 0x04
+ * Sync/Async: Synchronous
+ * Reentrancy: Reentrant
+ * Parameters (in): ChannelGroupIdPtr Pointer to ChannelGroup
+ * Parameters(inout):None
+ * Parameters (out): None
+ * Return value: Dio_PortLevelType Level of a subset of the adjoining bits of a port
+ * Description: This Service reads a subset of the adjoining bits of a port.
+ ******************************************************************************/
 Dio_PortLevelType Dio_ReadChannelGroup(const Dio_ChannelGroupType* ChannelGroupIdPtr );
 
-
+/***************************************************************************
+ * Service name: Dio_WriteChannelGroup
+ * Service ID[hex]: 0x05
+ * Sync/Async: Synchronous
+ * Reentrancy: Reentrant
+ * Parameters (in): ChannelGroupIdPtr -pointer to channel group
+ * Parameters (in): Level - Value to be written
+ * Parameters(inout):None
+ * Parameters (out): None
+ * Return value: None
+ * Description: Service to set a subset of the adjoining bits of a port to a specified level.
+ ******************************************************************************/
 void Dio_WriteChannelGroup(const Dio_ChannelGroupType* ChannelGroupIdPtr,Dio_PortLevelType Level );
 
 

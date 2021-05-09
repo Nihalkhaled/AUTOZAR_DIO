@@ -37,6 +37,8 @@
 #define LED_GROUP1					     		           (&ConfiguredChannelGroups[0])
 
 
+/*Determines If the microcontroller supports the direct read-back of a pin value or not*/
+#define DIO_READ_BACK FALSE
 
 /*Adds or removes the Dio_FlipChannel API from the code.*/
 #define DIO_FLIP_CHANNEL_API                               FALSE
