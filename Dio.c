@@ -47,10 +47,10 @@ Dio_LevelType Dio_ReadChannel(Dio_ChannelType ChannelId)
 
 	/*
 	 * [SWS_Dio_00074] If development error detection is enabled, the services Dio_ReadChannel, Dio_WriteChannel
-	 * and Dio_FlipChannel shall check the “ChannelId” parameter to be valid within the current configuration. If the
-	 * “ChannelId” parameter is invalid, the functions shall report the error code DIO_E_PARAM_INVALID_CHANNEL_ID to the DET.
+	 * and Dio_FlipChannel shall check the ï¿½ChannelIdï¿½ parameter to be valid within the current configuration. If the
+	 * ï¿½ChannelIdï¿½ parameter is invalid, the functions shall report the error code DIO_E_PARAM_INVALID_CHANNEL_ID to the DET.
 	 *
-	 * [SWS_Dio_00118] If development errors are enabled and an error ocurred the Dio module’s read functions
+	 * [SWS_Dio_00118] If development errors are enabled and an error ocurred the Dio moduleï¿½s read functions
 	 * shall return with the value '0'
 	 */
 #if DIO_DevErrorDetect_API == TRUE
@@ -203,6 +203,24 @@ void Dio_WriteChannel(Dio_ChannelType ChannelId, Dio_LevelType Level)
 
 Dio_PortLevelType Dio_ReadPort(Dio_PortType PortId)
 {
+
+		/*
+	 * [SWS_Dio_00075] âŒˆ If development error detection is enabled, the functions 
+	 *  Dio_ReadPort and Dio_WritePort shall check the â€œPortIdâ€ parameter to be valid 
+     *  within the current configuration. If the â€œPortIdâ€ parameter is invalid, the functions shall 
+     *  report the error code DIO_E_PARAM_INVALID_PORT_ID to the DET.
+
+	 * [SWS_Dio_00118] If development errors are enabled and an error ocurred the Dio moduleï¿½s read functions
+	 * shall return with the value '0'
+	 */
+#if DIO_DevErrorDetect_API == TRUE
+	if(PortId > MAX_NUM_DIO_PORTS)
+	{
+		Det_ReportError(DIO_MODULE_ID, DIO_INSTANCE_ID, DIO_READ_CHANNEL_SID,DIO_E_PARAM_INVALID_PORT_ID);
+		return 0;
+	}
+#endif
+	
 	Dio_PortLevelType Port_level;
 	volatile uint8 * DDRx;
 	volatile uint8 * PINx;
@@ -282,7 +300,7 @@ void Dio_WritePort(Dio_PortType PortId, Dio_PortLevelType Level){
 	volatile uint8 * Portx;
 	/*
 	 *  [SWS_Dio_00075] If development error detection is enabled, the functions Dio_ReadPort and Dio_WritePort shall check the
-	 *   “PortId” parameter to be valid within the current configuration. If the “PortId” parameter is invalid,
+	 *   ï¿½PortIdï¿½ parameter to be valid within the current configuration. If the ï¿½PortIdï¿½ parameter is invalid,
 	 *   the functions shall report the error code DIO_E_PARAM_INVALID_PORT_ID to the DET.
 	 */
 #if DIO_DevErrorDetect_API == TRUE
@@ -320,7 +338,7 @@ void Dio_WritePort(Dio_PortType PortId, Dio_PortLevelType Level){
 
 	/* [SWS_Dio_00034] The Dio_WritePort function shall set the specified value for the specified port. (SRS_Dio_12003)
 	 *
-	 * [SWS_Dio_00119] If development errors are enabled and an error ocurred, the Dio module’s write functions
+	 * [SWS_Dio_00119] If development errors are enabled and an error ocurred, the Dio moduleï¿½s write functions
 	 * shall NOT process the write command. (SRS_SPAL_12448)
 	 *
 	 * [SWS_Dio_00105] When writing a port which is smaller than the Dio_PortType
@@ -407,42 +425,42 @@ void Dio_WriteChannelGroup(const Dio_ChannelGroupType* ChannelGroupIdPtr,Dio_Por
 	case DIO_PORT_A:
 		if(Level == STD_HIGH)
 		{
-			*PORTA |= ChannelGroupIdPtr->mask << ChannelGroupIdPtr->offset;
+			*PORTA |= ChannelGroupIdPtr->mask ;
 		}
 		else
 		{
-			*PORTA &= !(ChannelGroupIdPtr->mask << ChannelGroupIdPtr->offset);
+			*PORTA &= !(ChannelGroupIdPtr->mask);
 		}
 		break;
 
 	case DIO_PORT_B:
 		if(Level == STD_HIGH)
 		{
-			*PORTB |= (ChannelGroupIdPtr->mask << ChannelGroupIdPtr->offset);
+			*PORTB |= (ChannelGroupIdPtr->mask);
 		}
 		else
 		{
-			*PORTB &= !(ChannelGroupIdPtr->mask << ChannelGroupIdPtr->offset);
+			*PORTB &= !(ChannelGroupIdPtr->mask);
 		}
 		break;
 	case DIO_PORT_C:
 		if(Level == STD_HIGH)
 		{
-			*PORTC |= (ChannelGroupIdPtr->mask << ChannelGroupIdPtr->offset);
+			*PORTC |= (ChannelGroupIdPtr->mask);
 		}
 		else
 		{
-			*PORTC &= !(ChannelGroupIdPtr->mask << ChannelGroupIdPtr->offset);
+			*PORTC &= !(ChannelGroupIdPtr->mask );
 		}
 		break;
 	case DIO_PORT_D:
 		if(Level == STD_HIGH)
 		{
-			*PORTD |= (ChannelGroupIdPtr->mask << ChannelGroupIdPtr->offset);
+			*PORTD |= (ChannelGroupIdPtr->mask );
 		}
 		else
 		{
-			*PORTD &= !(ChannelGroupIdPtr->mask << ChannelGroupIdPtr->offset);
+			*PORTD &= !(ChannelGroupIdPtr->mask);
 		}
 		break;
 	default:
